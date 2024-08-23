@@ -1,5 +1,5 @@
 --Updating the Region Table
-INSERT INTO Region (Region)
+INSERT INTO Region (Name)
 VALUES
 	('North'),
 	('South'),

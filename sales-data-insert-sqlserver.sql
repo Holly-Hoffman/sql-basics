@@ -29,3 +29,66 @@ VALUES
 (2, 'Jane', 'Smith', 'South', '2024-02-25', 2336, 'Acme Corp');
 
 GO
+
+/*hardcoding
+INSERT INTO Region (Name)
+VALUES
+	('North'),
+	('South'),
+	('East'),
+	('West');
+
+INSERT INTO Customer (Name)
+VALUES
+	('Acme Corp'), 
+	('Beta Inc'), 
+	('Delta Co'), 
+	('Epsilon Ltd'), 
+	('Gamma LLC'), 
+	('Omega Enterprises'), 
+	('Sigma Solutions'), 
+	('Zeta Partners');
+
+INSERT INTO SalesPerson (FirstName, LastName, RegionId)
+VALUES
+	('John', 'Doe', 1),
+	('Jane', 'Smith', 2),
+	('Alice', 'Brown', 3),
+	('Bob', 'Johnson', 4),
+	('Eve', 'Davis', 1);
+*/
+
+--Or, to do it as a select/insert:
+--names come from sales denormalized
+--region id comes from region table
+
+INSERT INTO	Region (Name)
+SELECT DISTINCT Region
+FROM Sales_Denormalized;
+
+INSERT INTO Customer (Name)
+SELECT DISTINCT Customer
+FROM Sales_Denormalized;
+
+INSERT INTO SalesPerson (FirstName, LastName, RegionId)
+SELECT DISTINCT SalesPersonFirstName, SalesPersonLastName, Region.Id
+	FROM Sales_Denormalized
+	JOIN Region ON Sales_Denormalized.Region = Region.Name;
+
+INSERT INTO Sales (SalesPersonId, SalesDate, SalesAmount, CustomerId)
+SELECT sp.Id, sd.SalesDate, sd.SalesAmount, c.Id
+	FROM Sales_Denormalized sd
+	JOIN SalesPerson sp ON sp.FirstName = sd.SalesPersonFirstName AND sp.LastName = sd.SalesPersonLastName
+	JOIN Customer c ON c.Name = sd.Customer;
+
+--Validate w/4-table join of sales, salesperson, region, and customer.
+SELECT 'RAW DATA', SalesPersonFirstName, SalesPersonLastName, Region, SalesDate, SalesAmount, Customer
+FROM Sales_Denormalized
+ORDER BY SalesAmount;
+
+SELECT 'JOIN', sp.FirstName, sp.LastName, r.Name AS RegionName,  s.SalesDate, s.SalesAmount, c.Name
+FROM Sales s
+JOIN SalesPerson sp ON SP.Id = s.SalesPersonId
+JOIN Region r ON sp.RegionId = r.Id
+JOIN Customer c ON c.Id = S.CustomerId
+ORDER BY SalesAmount;
